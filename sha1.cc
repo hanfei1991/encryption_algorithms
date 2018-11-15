@@ -9,6 +9,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <cstring>
 #include "sha1.h"
 //#define BUILD_WITH_PROFILER
 #define USE_SSE 0
