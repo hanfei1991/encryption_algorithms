@@ -60,6 +60,8 @@ inline uint16_t reverse_bytes(uint16_t val) { return rotl<8>(val); }
 
 #ifdef _WIN32
 #define BOTAN_BUILD_COMPILER_IS_MSVC
+#elif defined(__clang__)
+#define BOTAN_BUILD_COMPILER_IS_CLANG
 #endif
 /**
  * Swap a 32 bit integer
