@@ -5,12 +5,12 @@
 //
 // Created by Gin Liu on 2018/9/9.
 //
+#include "sha1.h"
 #include <array>
+#include <cstring>
 #include <fstream>
 #include <string>
 #include <vector>
-#include <cstring>
-#include "sha1.h"
 //#define BUILD_WITH_PROFILER
 #define USE_SSE 0
 #ifdef BUILD_WITH_PROFILER
@@ -20,7 +20,7 @@
 /*
  * SHA-160 F1 Function
  */
-inline void F1(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E,
+inline void F1(uint32_t A, uint32_t &B, uint32_t C, uint32_t D, uint32_t &E,
                uint32_t msg) {
   E += (D ^ (B & (C ^ D))) + msg + 0x5A827999 + rotl<5>(A);
   B = rotl<30>(B);
@@ -29,7 +29,7 @@ inline void F1(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E,
 /*
  * SHA-160 F2 Function
  */
-inline void F2(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E,
+inline void F2(uint32_t A, uint32_t &B, uint32_t C, uint32_t D, uint32_t &E,
                uint32_t msg) {
   E += (B ^ C ^ D) + msg + 0x6ED9EBA1 + rotl<5>(A);
   B = rotl<30>(B);
@@ -38,7 +38,7 @@ inline void F2(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E,
 /*
  * SHA-160 F3 Function
  */
-inline void F3(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E,
+inline void F3(uint32_t A, uint32_t &B, uint32_t C, uint32_t D, uint32_t &E,
                uint32_t msg) {
   E += ((B & C) | ((B | C) & D)) + msg + 0x8F1BBCDC + rotl<5>(A);
   B = rotl<30>(B);
@@ -47,7 +47,7 @@ inline void F3(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E,
 /*
  * SHA-160 F4 Function
  */
-inline void F4(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E,
+inline void F4(uint32_t A, uint32_t &B, uint32_t C, uint32_t D, uint32_t &E,
                uint32_t msg) {
   E += (B ^ C ^ D) + msg + 0xCA62C1D6 + rotl<5>(A);
   B = rotl<30>(B);
@@ -67,14 +67,14 @@ inline uint16_t reverse_bytes(uint16_t val) { return rotl<8>(val); }
  * Swap a 32 bit integer
  */
 inline uint32_t reverse_bytes(uint32_t val) {
-#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || \
+#if defined(BOTAN_BUILD_COMPILER_IS_GCC) ||                                    \
     defined(BOTAN_BUILD_COMPILER_IS_CLANG)
   return __builtin_bswap32(val);
 
 #elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
   return _byteswap_ulong(val);
 
-#elif defined(BOTAN_USE_GCC_INLINE_ASM) && \
+#elif defined(BOTAN_USE_GCC_INLINE_ASM) &&                                     \
     defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
   // GCC-style inline assembly for x86 or x86-64
@@ -93,7 +93,7 @@ inline uint32_t reverse_bytes(uint32_t val) {
  * Swap a 64 bit integer
  */
 inline uint64_t reverse_bytes(uint64_t val) {
-#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || \
+#if defined(BOTAN_BUILD_COMPILER_IS_GCC) ||                                    \
     defined(BOTAN_BUILD_COMPILER_IS_CLANG)
   return __builtin_bswap64(val);
 
@@ -123,8 +123,7 @@ inline uint64_t reverse_bytes(uint64_t val) {
 /**
  * Swap 4 Ts in an array
  */
-template <typename T>
-inline void bswap_4(T x[4]) {
+template <typename T> inline void bswap_4(T x[4]) {
   x[0] = reverse_bytes(x[0]);
   x[1] = reverse_bytes(x[1]);
   x[2] = reverse_bytes(x[2]);
@@ -134,7 +133,7 @@ inline void bswap_4(T x[4]) {
 template <typename T>
 inline void load_be(T out[], const uint8_t in[], size_t count) {
   if (count > 0) {
-#if 0  // defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
+#if 0 // defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
         std::memcpy(out, in, sizeof(T)*count);
 
 #elif 1
@@ -142,17 +141,27 @@ inline void load_be(T out[], const uint8_t in[], size_t count) {
     const size_t blocks = count - (count % 4);
     const size_t left = count - blocks;
 
-    for (size_t i = 0; i != blocks; i += 4) bswap_4(out + i);
+    for (size_t i = 0; i != blocks; i += 4)
+      bswap_4(out + i);
 
     for (size_t i = 0; i != left; ++i)
       out[blocks + i] = reverse_bytes(out[blocks + i]);
 #else
-    for (size_t i = 0; i != count; ++i) out[i] = load_be<T>(in, i);
+    for (size_t i = 0; i != count; ++i)
+      out[i] = load_be<T>(in, i);
 #endif
   }
 }
 
 struct SHA1Cal {
+  struct SHA1HashValue {
+    uint32_t A, B, C, D, E;
+    std::string HashString() {
+      char x[50];
+      sprintf(x, "%08x%08x%08x%08x%08x", A, B, C, D, E);
+      return x;
+    }
+  };
   std::vector<uint32_t> m_digest = std::vector<uint32_t>(5, 0);
 
   void Init() {
@@ -161,10 +170,9 @@ struct SHA1Cal {
     m_digest[2] = 0x98BADCFE;
     m_digest[3] = 0x10325476;
     m_digest[4] = 0xC3D2E1F0;
-    
   }
 
-  void SHA1Hash(uint8_t* bytes, size_t len) {
+  void SHA1Hash(uint8_t *bytes, size_t len) {
 
 #ifdef BUILD_WITH_PROFILER
     EASY_FUNCTION();
@@ -174,8 +182,8 @@ struct SHA1Cal {
     return;
 #else
     std::vector<uint32_t> m_W;
-	uint32_t A = m_digest[0], B = m_digest[1], C = m_digest[2], D = m_digest[3],
-    E = m_digest[4];
+    uint32_t A = m_digest[0], B = m_digest[1], C = m_digest[2], D = m_digest[3],
+             E = m_digest[4];
     /**
      * The message buffer
      */
@@ -323,17 +331,19 @@ struct SHA1Cal {
 #define CRAZY_CRYPTO_ASSERT(a) ((void)0)
 
   static constexpr int BLOCK_SIZE = 64000000;
-  void Update(const char* buf, int b) {
-    SHA1Hash(reinterpret_cast<uint8_t*>(const_cast<char*>(buf)), b);
+  void Update(const char *buf, int b) {
+    SHA1Hash(reinterpret_cast<uint8_t *>(const_cast<char *>(buf)), b);
   }
 
-  void Finish(std::vector<char>& data, uint64_t size) {
+  void Finish(std::vector<char> &data, uint64_t size) {
 #ifdef BUILD_WITH_PROFILER
     EASY_FUNCTION();
 #endif
 
     // can a file mod 7 == 0 in binary  bit level??
-    // YES, But on most operating system, file always in bytes (8 bits). So we only deal with file bits mode 8 == 0, do not deal with file mod 7 things, so std::vector<char>'s all bits are file binary.
+    // YES, But on most operating system, file always in bytes (8 bits). So we
+    // only deal with file bits mode 8 == 0, do not deal with file mod 7 things,
+    // so std::vector<char>'s all bits are file binary.
 
     CRAZY_CRYPTO_ASSERT(data.size() * 8 >= 0 && data.size() * 8 <= 511);
     unsigned char xx = static_cast<unsigned char>(0x80);
@@ -355,8 +365,8 @@ struct SHA1Cal {
     uint64_t l = size * 8;
     data.resize(data.size() + 8, 0);
     l = reverse_bytes(l);
-    memcpy(reinterpret_cast<char*>(&data.back() - 7),
-           reinterpret_cast<char*>(&l), 8);
+    memcpy(reinterpret_cast<char *>(&data.back() - 7),
+           reinterpret_cast<char *>(&l), 8);
     if (data.size() * 8 > 512) {
       Update(data.data(), 1);
       Update(data.data() + 64, 1);
@@ -364,17 +374,17 @@ struct SHA1Cal {
       Update(data.data(), 1);
     }
   }
-  void FileStreamTransform(std::ifstream& fin) {
+  SHA1HashValue FileStreamTransform(std::ifstream &fin) {
 
 #ifdef BUILD_WITH_PROFILER
     EASY_FUNCTION();
 #endif
-    std::array<char, BLOCK_SIZE>* bufraw = new std::array<char, BLOCK_SIZE>();
-    std::array<char, BLOCK_SIZE>& buf = *bufraw;
+    std::array<char, BLOCK_SIZE> *bufraw = new std::array<char, BLOCK_SIZE>();
+    std::array<char, BLOCK_SIZE> &buf = *bufraw;
     memset(buf.data(), 0, sizeof(char) * BLOCK_SIZE);
 
 #ifdef BUILD_WITH_PROFILER
-      EASY_BLOCK("read file");
+    EASY_BLOCK("read file");
 #endif
     fin.read(buf.data(), BLOCK_SIZE);
     auto p = fin.gcount();
@@ -403,36 +413,58 @@ struct SHA1Cal {
       Update(data.data(), b);
     }
     if (left) {
-      std::vector<char> data(buf.begin() + b * 64, buf.begin() + b * 64 + int(left));
+      std::vector<char> data(buf.begin() + b * 64,
+                             buf.begin() + b * 64 + int(left));
       Finish(data, i * BLOCK_SIZE + uint64_t(1) * b * 64 + data.size());
     } else {
       std::vector<char> data;
       Finish(data, i * BLOCK_SIZE + uint64_t(1) * b * 64);
     }
-	 uint32_t A = (m_digest[0]),
-      B = (m_digest[1]),
-      C = (m_digest[2]),
-      D = (m_digest[3]),
-      E = (m_digest[4]);
-    printf("%08x%08x%08x%08x%08x", A, B, C, D, E);
+    uint32_t A = (m_digest[0]), B = (m_digest[1]), C = (m_digest[2]),
+             D = (m_digest[3]), E = (m_digest[4]);
+    SHA1HashValue s;
+    s.A = A;
+    s.B = B;
+    s.C = C;
+    s.D = D;
+    s.E = E;
+
+    return s;
   }
 };
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
 #ifdef BUILD_WITH_PROFILER
   EASY_PROFILER_ENABLE;
 #endif
   int l(argc);
-  argc--;
-  while (argc--) {
-    std::string path(argv[l - argc - 1]);
-    SHA1Cal sha;
-    sha.Init();
-    std::ifstream fin(path, std::ios::binary);
-    sha.FileStreamTransform(fin);
-    printf(" %s\n", path.c_str());
+  if (argc == 3 && std::string(argv[1]) == "-c") {
+    std::ifstream fin(argv[2]);
+    std::string sha1hash, path;
+    while (fin >> sha1hash >> path) {
+      SHA1Cal sha;
+      sha.Init();
+      std::ifstream fin(path, std::ios::binary);
+      if (sha1hash == sha.FileStreamTransform(fin).HashString()) {
+        printf("%s: OK\n", path.c_str());
+      } else {
+        printf("%s: FAILED\n", path.c_str());
+      }
+    }
+  } else {
+    argc--;
+    while (argc--) {
+      std::string path(argv[l - argc - 1]);
+      SHA1Cal sha;
+      sha.Init();
+      std::ifstream fin(path, std::ios::binary);
+      auto s = sha.FileStreamTransform(fin);
+      printf("%s", s.HashString().c_str());
+      printf(" %s\n", path.c_str());
+    }
   }
 #ifdef BUILD_WITH_PROFILER
   profiler::dumpBlocksToFile("test.prof");
 #endif
+  return 0;
 }
