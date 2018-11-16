@@ -1,0 +1,4 @@
+xbuild
+.vscode
+.idea
+cmake-build-*
