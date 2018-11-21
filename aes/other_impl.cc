@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Advanced Encryption Standard
  * @author Dani Huertas
  * @email huertas.dani@gmail.com
@@ -10,6 +10,8 @@
 #include <cstdint>
 
 #include "matrix.h"
+#include "sbox.h"
+#include "../catch.hpp"
 
 /*
  * The cipher Key.
@@ -217,10 +219,14 @@ void inv_shift_rows(uint8_t *state) {
  * State bytes independently.
  */
 void sub_bytes(uint8_t *state) {
-
+#if 1
+  Matrix<4, 4, uint8_t> m;
+  memcpy(m.data, state, decltype(m)::byte_count);
+  SboxTr(m);
+  memcpy(state, m.data, decltype(m)::byte_count);
+#else
   uint8_t i, j;
   uint8_t row, col;
-
   for (i = 0; i < 4; i++) {
     for (j = 0; j < Nb; j++) {
       row = (state[Nb*i+j] & 0xf0) >> 4;
@@ -228,6 +234,7 @@ void sub_bytes(uint8_t *state) {
       state[Nb*i+j] = s_box[16*row+col];
     }
   }
+#endif
 }
 
 /*
@@ -402,7 +409,7 @@ void inv_cipher(uint8_t *in, uint8_t *out, uint8_t *w) {
   }
 }
 
-int main2(int argc, char *argv[]) {
+TEST_CASE("aes other algorithms", "[aes]") {
 
   uint8_t i;
 
@@ -517,7 +524,4 @@ int main2(int argc, char *argv[]) {
   }
 
   printf("\n");
-
-  exit(0);
-
 }

@@ -3,8 +3,10 @@
 //
 
 #include "sbox.h"
-#include <cstdint>
+#include "../catch.hpp"
 #include "matrix.h"
+#include <cstdint>
+#include <vector>
 
 const uint8_t kSbox[256] = {
     0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B,
@@ -30,7 +32,95 @@ const uint8_t kSbox[256] = {
     0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F,
     0xB0, 0x54, 0xBB, 0x16};
 
-void SboxTr(Matrix<4, 4>& m) {
+std::vector<uint8_t> m = {
+    1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0,
+    1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1,
+    1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1,
+};
+std::vector<uint8_t> m2 = {1, 1, 0, 0, 0, 1, 1, 0};
+// std::vector<uint8_t> m2 = {0, 1, 1, 0, 0, 0, 1, 1};
 
+using MT = Matrix<8, 8, uint8_t>;
+using MT2 = Matrix<8, 1, uint8_t>;
+MT x;
+MT2 c;
+int g_nouse = ([]() -> int {
+  memcpy(x.data, m.data(), MT::byte_count);
+  memcpy(c.data, m2.data(), MT2::byte_count);
+  return 0;
+})();
+
+uint8_t GetInverse(uint8_t x) {
+  int tx = x;
+  for (int i = 0; i < 253; ++i) {
+    x = gmult(x, tx);
+  }
+  return x;
 }
 
+uint8_t SBoxTr(uint8_t n) {
+  n = GetInverse(n);
+  std::vector<uint8_t> tt;
+  tt.push_back((uint8_t)((n & 0x1)));
+  tt.push_back((uint8_t)((n & 0x2) >> 1));
+  tt.push_back((uint8_t)((n & 0x4) >> 2));
+  tt.push_back((uint8_t)((n & 0x8) >> 3));
+  tt.push_back((uint8_t)((n & 0x10) >> 4));
+  tt.push_back((uint8_t)((n & 0x20) >> 5));
+  tt.push_back((uint8_t)((n & 0x40) >> 6));
+  tt.push_back((uint8_t)((n & 0x80) >> 7));
+  //  std::reverse(tt.begin(), tt.end());
+  Matrix<8, 1, uint8_t> a;
+  memcpy(a.data, tt.data(), decltype(a)::byte_count);
+  //  x.Print("x");
+  //  a.Print("a");
+  auto y = Mul<8, 8, 1, uint8_t, AddOp, MulOp>(x, a);
+  //  y.Print("y");
+  //  c.Print("c");
+  auto r = Add<8, 1, uint8_t, AddOp>(y, c);
+  //  r.Print("r");
+  //  uint8_t kk = r.data[3][0] << 0 | r.data[2][0] << 1 | r.data[1][0] << 2 |
+  //               r.data[0][0] << 3 | r.data[7][0] << 4 | r.data[6][0] << 5 |
+  //               r.data[5][0] << 6 | r.data[4][0] << 7;
+
+  uint8_t kk = r.data[0][0] << 0 | r.data[1][0] << 1 | r.data[2][0] << 2 |
+               r.data[3][0] << 3 | r.data[4][0] << 4 | r.data[5][0] << 5 |
+               r.data[6][0] << 6 | r.data[7][0] << 7;
+  return kk;
+}
+
+std::vector<uint8_t> BuildSbox() {
+  std::vector<uint8_t> sbox;
+  for (size_t i = 0; i < 256; ++i) {
+    sbox.push_back(SBoxTr(i));
+  }
+  return sbox;
+}
+
+uint8_t ginv(uint8_t a) {
+  uint8_t j, b = a;
+  for (j = 14; --j;)             /* for j from 13 downto 1 */
+    b = gmult(b, j & 1 ? b : a); /* alternatively square and multiply */
+  return b;
+}
+
+TEST_CASE("inverse", "[sbox]") {
+  REQUIRE(0xca == GetInverse(0x53));
+  REQUIRE(0xca == ginv(0x53));
+}
+
+TEST_CASE("basic tr", "[sbox]") {
+  auto x = SBoxTr(0x53);
+  REQUIRE(x == 0xed);
+  auto z = SBoxTr(0x64);
+  REQUIRE(z == 0x43);
+}
+
+void SboxTr(Matrix<4, 4, uint8_t> &m) {
+  static auto sbox = std::move(BuildSbox());
+  for (size_t i = 0; i < 4; ++i) {
+    for (size_t j = 0; j < 4; ++j) {
+      m.data[i][j] = sbox[m.data[i][j]];
+    }
+  }
+}

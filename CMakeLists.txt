@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 #set(CMAKE_INSTALL_PREFIX  /Users/gggin/workspace/tenhard)
 #set(CMAKE_PREFIX_PATH f:/Program\ Files/easy_profiler/lib/cmake/easy_profiler)
-#find_package(easy_profiler REQUIRED)  
+#find_package(easy_profiler REQUIRED)
 
 set(TARGET_NAME sha1)
 
@@ -28,7 +28,18 @@ add_executable(
         aes
         aes/matrix.cc
         aes/matrix.h
-        aes/sbox.cc aes/sbox.h aes/other_impl.cc aes/other_impl.h)
+        aes/sbox.cc
+        aes/sbox.h
+        aes/other_impl.cc
+        aes/other_impl.h)
+
+add_library(
+        catch_test_main
+        STATIC
+        catch_main.cc
+)
+
+target_link_libraries(aes catch_test_main)
 
 if(MSVC)
   target_compile_options(${TARGET_NAME} PRIVATE /W4 /WX)

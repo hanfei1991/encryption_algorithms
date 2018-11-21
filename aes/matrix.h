@@ -5,6 +5,7 @@
 #ifndef TENHARD_MATRIX_H
 #define TENHARD_MATRIX_H
 #include <array>
+#include <string>
 /*
  * Addition in GF(2^8)
  * http://en.wikipedia.org/wiki/Finite_field_arithmetic
@@ -90,13 +91,16 @@ public:
   using element_type = T;
   static size_t byte_count;
   T data[X][Y];
-  void Print() {
+
+  void Print(const std::string &prefix = std::string()) {
+    printf("[START]%s:\n", prefix.c_str());
     for (size_t i = 0; i < X; ++i) {
       for (size_t j = 0; j < Y; ++j) {
-        printf("%03d ", data[i][j]);
+        printf("%#03x ", data[i][j]);
       }
       printf("\n");
     }
+    printf("%s[END]\n\n", prefix.c_str());
   }
 };
 
@@ -113,10 +117,22 @@ Matrix<X, Z, T> Mul(const Matrix<X, Y, T> &a, const Matrix<Y, Z, T> &b) {
         sum = AddOp()(sum, MulOp()(a.data[i][k], b.data[k][j]));
       }
       m.data[i][j] = sum;
-      printf("[i][j] sum, %d %d %d\n", i, j, sum);
+      //      printf("[i][j] sum, %d %d %d\n", i, j, sum);
     }
   }
   return m;
 }
-
+template <size_t X, size_t Y, class T, class AddOp>
+Matrix<X, Y, T> Add(const Matrix<X, Y, T> &a, const Matrix<X, Y, T> &b) {
+  Matrix<X, Y, T> m;
+  for (size_t i = 0; i < X; ++i) {
+    for (size_t j = 0; j < Y; ++j) {
+      typename Matrix<X, Y, T>::element_type sum = 0;
+      sum = AddOp()(a.data[i][j], b.data[i][j]);
+      m.data[i][j] = sum;
+      //      printf("[i][j] sum, %d %d %d\n", i, j, sum);
+    }
+  }
+  return m;
+}
 #endif // TENHARD_MATRIX_H

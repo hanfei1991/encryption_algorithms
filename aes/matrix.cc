@@ -3,11 +3,17 @@
 //
 #include "matrix.h"
 #include <vector>
+#include "../catch.hpp"
 
-int main() {
+
+TEST_CASE("basic2", "[matrix]") {
+  REQUIRE(true);
+}
+
+TEST_CASE("basic", "[matrix]") {
   using MatrixInt4_3 = Matrix<4, 3, int>;
   using MatrixInt3_5 = Matrix<3, 5, int>;
-  using EleType = MatrixInt4_3 ::element_type;
+  using EleType = MatrixInt4_3::element_type;
   MatrixInt4_3 x;
   MatrixInt3_5 y;
   std::vector<EleType> v1 = {
@@ -34,6 +40,5 @@ int main() {
 
   r.Print();
   printf("\n");
-  assert(!memcmp((void *)&r.data, vr.data(), Matrix<4, 5>::byte_count));
-  return 0;
+  REQUIRE(!memcmp((void *)&r.data, vr.data(), Matrix<4,5,int>::byte_count));
 }
