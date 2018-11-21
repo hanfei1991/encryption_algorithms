@@ -31,7 +31,9 @@ add_executable(
         aes/sbox.cc
         aes/sbox.h
         aes/other_impl.cc
-        aes/other_impl.h)
+        aes/other_impl.h
+aes/aes.cc
+aes/aes.h)
 
 add_library(
         catch_test_main

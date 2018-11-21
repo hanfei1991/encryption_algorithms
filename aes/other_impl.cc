@@ -4,6 +4,7 @@
 #include "matrix.h"
 #include "sbox.h"
 #include "../catch.hpp"
+#include "aes.h"
 
 /*
  * The cipher Key.
@@ -120,139 +121,7 @@ void add_round_key(uint8_t *state, uint8_t *w, uint8_t r)
   }
 }
 
-/*
- * Transformation in the Cipher that takes all of the columns of the
- * State and mixes their data (independently of one another) to
- * produce new columns.
- */
-void mix_columns(uint8_t *state)
-{
 
-  uint8_t a[] = {0x02, 0x01, 0x01, 0x03}; // a(x) = {02} + {01}x + {01}x2 + {03}x3
-  uint8_t i, j, col[4], res[4];
-
-  for (j = 0; j < Nb; j++)
-  {
-    for (i = 0; i < 4; i++)
-    {
-      col[i] = state[Nb * i + j];
-    }
-
-    coef_mult(a, col, res);
-
-    for (i = 0; i < 4; i++)
-    {
-      state[Nb * i + j] = res[i];
-    }
-  }
-}
-
-/*
- * Transformation in the Inverse Cipher that is the inverse of
- * MixColumns().
- */
-void inv_mix_columns(uint8_t *state)
-{
-
-  uint8_t a[] = {0x0e, 0x09, 0x0d, 0x0b}; // a(x) = {0e} + {09}x + {0d}x2 + {0b}x3
-  uint8_t i, j, col[4], res[4];
-
-  for (j = 0; j < Nb; j++)
-  {
-    for (i = 0; i < 4; i++)
-    {
-      col[i] = state[Nb * i + j];
-    }
-
-    coef_mult(a, col, res);
-
-    for (i = 0; i < 4; i++)
-    {
-      state[Nb * i + j] = res[i];
-    }
-  }
-}
-
-/*
- * Transformation in the Cipher that processes the State by cyclically
- * shifting the last three rows of the State by different offsets.
- */
-void shift_rows(uint8_t *state)
-{
-
-  uint8_t i, k, s, tmp;
-
-  for (i = 1; i < 4; i++)
-  {
-    // shift(1,4)=1; shift(2,4)=2; shift(3,4)=3
-    // shift(r, 4) = r;
-    s = 0;
-    while (s < i)
-    {
-      tmp = state[Nb * i + 0];
-
-      for (k = 1; k < Nb; k++)
-      {
-        state[Nb * i + k - 1] = state[Nb * i + k];
-      }
-
-      state[Nb * i + Nb - 1] = tmp;
-      s++;
-    }
-  }
-}
-
-/*
- * Transformation in the Inverse Cipher that is the inverse of
- * ShiftRows().
- */
-void inv_shift_rows(uint8_t *state)
-{
-
-  uint8_t i, k, s, tmp;
-
-  for (i = 1; i < 4; i++)
-  {
-    s = 0;
-    while (s < i)
-    {
-      tmp = state[Nb * i + Nb - 1];
-
-      for (k = Nb - 1; k > 0; k--)
-      {
-        state[Nb * i + k] = state[Nb * i + k - 1];
-      }
-
-      state[Nb * i + 0] = tmp;
-      s++;
-    }
-  }
-}
-
-/*
- * Transformation in the Cipher that processes the State using a non­
- * linear byte substitution table (S-box) that operates on each of the
- * State bytes independently.
- */
-void sub_bytes(uint8_t *state)
-{
-  Matrix<4, 4, uint8_t> m;
-  memcpy(m.data, state, decltype(m)::byte_count);
-  SboxTr(m);
-  memcpy(state, m.data, decltype(m)::byte_count);
-}
-
-/*
- * Transformation in the Inverse Cipher that is the inverse of
- * SubBytes().
- */
-void inv_sub_bytes(uint8_t *state)
-{
-  Matrix<4, 4, uint8_t> m;
-  memcpy(m.data, state, decltype(m)::byte_count);
-  SboxInverseTr(m);
-  memcpy(state, m.data, decltype(m)::byte_count);
-}
 
 /*
  * Function used in the Key Expansion routine that takes a four-byte

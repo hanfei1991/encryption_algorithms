@@ -135,4 +135,12 @@ Matrix<X, Y, T> Add(const Matrix<X, Y, T> &a, const Matrix<X, Y, T> &b) {
   }
   return m;
 }
+
+template <size_t X, size_t Y, class T, class Convertor>
+void MatrixConvert(Matrix<X, Y, T> &m, T *state, Convertor cc) {
+  using M = Matrix<X, Y, T>;
+  memcpy(m.data, state, M::byte_count);
+  cc(m);
+  memcpy(state, m.data, M::byte_count);
+}
 #endif // TENHARD_MATRIX_H
