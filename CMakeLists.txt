@@ -28,7 +28,7 @@ add_executable(
         aes
         aes/matrix.cc
         aes/matrix.h
-)
+        aes/sbox.cc aes/sbox.h aes/other_impl.cc aes/other_impl.h)
 
 if(MSVC)
   target_compile_options(${TARGET_NAME} PRIVATE /W4 /WX)

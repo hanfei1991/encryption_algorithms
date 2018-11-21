@@ -5,28 +5,31 @@
 #include <vector>
 
 int main() {
-  Matrix<4, 3> x;
-  Matrix<3, 5> y;
-  std::vector<Matrix<4, 3>::element_type> v1 = {
+  using MatrixInt4_3 = Matrix<4, 3, int>;
+  using MatrixInt3_5 = Matrix<3, 5, int>;
+  using EleType = MatrixInt4_3 ::element_type;
+  MatrixInt4_3 x;
+  MatrixInt3_5 y;
+  std::vector<EleType> v1 = {
       1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 4, 8,
   };
 
-  std::vector<Matrix<3, 5>::element_type> v2 = {
+  std::vector<EleType> v2 = {
       1, 2, 3, 4, 5, 6, 1, 2, 4, 8, 16, 32, 1, 2, 3,
   };
 
-  std::vector<Matrix<4, 5>::element_type> vr = {
+  std::vector<EleType> vr = {
       61, 100, 10, 18, 30,  130, 205, 28, 48, 78,
       71, 54,  38, 62, 102, 154, 264, 22, 40, 66,
   };
-  memcpy(x.data, v1.data(), Matrix<4, 3>::byte_count);
-  memcpy(y.data, v2.data(), Matrix<3, 5>::byte_count);
+  memcpy(x.data, v1.data(), MatrixInt4_3::byte_count);
+  memcpy(y.data, v2.data(), MatrixInt3_5::byte_count);
 
   x.Print();
   printf("\n");
   y.Print();
   printf("\n");
-  auto r = Mul(x, y);
+  auto r = Mul<4, 3, 5, int, AddOpInt, MulOpInt>(x, y);
   printf("\n");
 
   r.Print();
