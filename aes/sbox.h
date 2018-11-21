@@ -9,4 +9,6 @@
 
 void SboxTr(Matrix<4, 4, uint8_t> &m);
 
+void SboxInverseTr(Matrix<4, 4, uint8_t> &m) ;
+
 #endif //TENHARD_SBOX_H
