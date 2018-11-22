@@ -97,14 +97,14 @@ void inv_sub_bytes(uint8_t *state) {
  */
 namespace {
 uint8_t R[] = {0x02, 0x00, 0x00, 0x00};
-    std::vector<uint8_t> cache;
-    std::vector<bool> flags;
-    auto xx =([]()->int {
-        cache.resize(4 * (15 + 1), 0);
-        flags.resize(4 * (15 + 1), false);
-        return 0;
-    })();
-}
+std::vector<uint8_t> cache;
+std::vector<bool> flags;
+auto xx = ([]() -> int {
+  cache.resize(4 * (15 + 1), 0);
+  flags.resize(4 * (15 + 1), false);
+  return 0;
+})();
+} // namespace
 
 uint8_t *Rcon(uint8_t i) {
   if (!flags[i]) {
@@ -124,4 +124,19 @@ uint8_t *Rcon(uint8_t i) {
     R[0] = cache[i];
   }
   return R;
+}
+
+void sub_word(uint8_t *w) {
+  uint8_t i;
+  Matrix<4, 1, uint8_t> m;
+  MatrixConvert(m, w, [](decltype(m) &m) { SboxTr(m); });
+}
+
+void add_round_key(uint8_t *state, uint8_t *w, uint8_t r) {
+  Matrix<4, 4, uint8_t> m, wm;
+  memcpy(m.data, state, decltype(m)::byte_count);
+  memcpy(wm.data, w + 4 * 4 * r, decltype(wm)::byte_count);
+  MatrixTranspose(wm);
+  m = Add<4, 4, uint8_t, AddOp>(m, wm);
+  memcpy(state, m.data, decltype(m)::byte_count);
 }

@@ -29,64 +29,7 @@ int Nk;
  */
 int Nr;
 
-/*
- * Transformation in the Cipher and Inverse Cipher in which a Round
- * Key is added to the State using an XOR operation. The length of a
- * Round Key equals the size of the State (i.e., for Nb = 4, the Round
- * Key length equals 128 bits/16 bytes).
- */
-void add_round_key(uint8_t *state, uint8_t *w, uint8_t r)
-{
 
-  uint8_t c;
-
-  for (c = 0; c < Nb; c++)
-  {
-    state[Nb * 0 + c] = state[Nb * 0 + c] ^ w[4 * Nb * r + 4 * c + 0]; //debug, so it works for Nb !=4
-    state[Nb * 1 + c] = state[Nb * 1 + c] ^ w[4 * Nb * r + 4 * c + 1];
-    state[Nb * 2 + c] = state[Nb * 2 + c] ^ w[4 * Nb * r + 4 * c + 2];
-    state[Nb * 3 + c] = state[Nb * 3 + c] ^ w[4 * Nb * r + 4 * c + 3];
-  }
-}
-
-
-
-/*
- * Function used in the Key Expansion routine that takes a four-byte
- * input word and applies an S-box to each of the four bytes to
- * produce an output word.
- */
-void sub_word(uint8_t *w)
-{
-
-  uint8_t i;
-
-  for (i = 0; i < 4; i++)
-  {
-//    w[i] = s_box[16 * ((w[i] & 0xf0) >> 4) + (w[i] & 0x0f)];
-    w[i] = SboxTrOne(w[i]);
-  }
-}
-
-/*
- * Function used in the Key Expansion routine that takes a four-byte
- * word and performs a cyclic permutation.
- */
-void rot_word(uint8_t *w)
-{
-
-  uint8_t tmp;
-  uint8_t i;
-
-  tmp = w[0];
-
-  for (i = 0; i < 3; i++)
-  {
-    w[i] = w[i + 1];
-  }
-
-  w[3] = tmp;
-}
 
 /*
  * Key Expansion
@@ -122,7 +65,6 @@ void key_expansion(uint8_t *key, uint8_t *w)
     }
     else if (Nk > 6 && i % Nk == 4)
     {
-
       sub_word(tmp);
     }
 

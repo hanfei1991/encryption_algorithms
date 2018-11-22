@@ -54,22 +54,6 @@ inline void coef_add(uint8_t a[], uint8_t b[], uint8_t d[]) {
   d[3] = a[3] ^ b[3];
 }
 
-/*
- * Multiplication of 4 byte words
- * m(x) = x4+1
- */
-inline void coef_mult(uint8_t *a, uint8_t *b, uint8_t *d) {
-
-  d[0] = gmult(a[0], b[0]) ^ gmult(a[3], b[1]) ^ gmult(a[2], b[2]) ^
-         gmult(a[1], b[3]);
-  d[1] = gmult(a[1], b[0]) ^ gmult(a[0], b[1]) ^ gmult(a[3], b[2]) ^
-         gmult(a[2], b[3]);
-  d[2] = gmult(a[2], b[0]) ^ gmult(a[1], b[1]) ^ gmult(a[0], b[2]) ^
-         gmult(a[3], b[3]);
-  d[3] = gmult(a[3], b[0]) ^ gmult(a[2], b[1]) ^ gmult(a[1], b[2]) ^
-         gmult(a[0], b[3]);
-}
-
 struct AddOp {
   inline uint8_t operator()(uint8_t a, uint8_t b) { return gadd(a, b); }
 };
@@ -142,5 +126,13 @@ void MatrixConvert(Matrix<X, Y, T> &m, T *state, Convertor cc) {
   memcpy(m.data, state, M::byte_count);
   cc(m);
   memcpy(state, m.data, M::byte_count);
+}
+
+template <size_t X, class T> void MatrixTranspose(Matrix<X, X, T> &m) {
+  for (size_t i = 0; i < X; ++i) {
+    for (size_t j = i; j < X; ++j) {
+      std::swap(m.data[i][j], m.data[j][i]);
+    }
+  }
 }
 #endif // TENHARD_MATRIX_H
