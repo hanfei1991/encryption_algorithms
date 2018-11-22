@@ -122,16 +122,23 @@ TEST_CASE("basic tr", "[sbox]") {
   REQUIRE(z == 0x43);
 }
 
+namespace {
+    auto sbox = std::move(BuildSbox());
+    auto sboxi = std::move(BuildSboxInverse());
+}
 void SboxTr(Matrix<4, 4, uint8_t> &m) {
-  static auto sbox = std::move(BuildSbox());
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 4; ++j) {
       m.data[i][j] = sbox[m.data[i][j]];
     }
   }
 }
+
+uint8_t SboxTrOne(uint8_t x) {
+  return sbox[x];
+}
+
 void SboxInverseTr(Matrix<4, 4, uint8_t> &m) {
-  static auto sboxi = std::move(BuildSboxInverse());
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 4; ++j) {
       m.data[i][j] = sboxi[m.data[i][j]];

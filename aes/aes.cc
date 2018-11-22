@@ -79,7 +79,6 @@ void mix_columns_inner(uint8_t *state,
 void mix_columns(uint8_t *state) { mix_columns_inner(state, mixMatrix); }
 
 void inv_mix_columns(uint8_t *state) {
-
   mix_columns_inner(state, mixMatrixInverse);
 }
 
@@ -91,4 +90,38 @@ void sub_bytes(uint8_t *state) {
 void inv_sub_bytes(uint8_t *state) {
   Matrix<4, 4, uint8_t> m;
   MatrixConvert(m, state, [](decltype(m) &m) { SboxInverseTr(m); });
+}
+
+/*
+ * Generates the round constant Rcon[i]
+ */
+namespace {
+uint8_t R[] = {0x02, 0x00, 0x00, 0x00};
+    std::vector<uint8_t> cache;
+    std::vector<bool> flags;
+    auto xx =([]()->int {
+        cache.resize(4 * (15 + 1), 0);
+        flags.resize(4 * (15 + 1), false);
+        return 0;
+    })();
+}
+
+uint8_t *Rcon(uint8_t i) {
+  if (!flags[i]) {
+    if (i == 1) {
+      R[0] = 0x01; // x^(1-1) = x^0 = 1
+    } else if (i > 1) {
+      R[0] = 0x02;
+      i--;
+      while (i - 1 > 0) {
+        R[0] = gmult(R[0], 0x02);
+        i--;
+      }
+    }
+    cache[i] = R[0];
+    flags[i] = true;
+  } else {
+    R[0] = cache[i];
+  }
+  return R;
 }
