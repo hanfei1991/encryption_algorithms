@@ -107,7 +107,7 @@ auto xx = ([]() -> int {
 } // namespace
 
 uint8_t *Rcon(uint8_t i) {
-  if (!flags[i]) {
+  //if (!flags[i]) { //TODO(Gin) cache has bug
     if (i == 1) {
       R[0] = 0x01; // x^(1-1) = x^0 = 1
     } else if (i > 1) {
@@ -120,9 +120,10 @@ uint8_t *Rcon(uint8_t i) {
     }
     cache[i] = R[0];
     flags[i] = true;
-  } else {
-    R[0] = cache[i];
-  }
+  //} else {
+  //  R[0] = cache[i];
+  //}
+//  printf("R: %d [end]", R[0]);
   return R;
 }
 
