@@ -122,21 +122,6 @@ TEST_CASE("basic tr", "[sbox]") {
   REQUIRE(z == 0x43);
 }
 
-/*
-TEST_CASE("array data", "[array]") {
-  int a[4][4] = {
-          0x1,0x2,0x3,0x4,
-          0x5,0x6,0x7,0x8,
-          0x9,10,11,12,
-          13, 14,15,16
-  };
-  for(size_t i = 0; i < 16; ++i) {
-    int x = *(a + i);
-    printf("test %d \n", x);
-  }
-}
-*/
-
 namespace {
 auto sbox = std::move(BuildSbox());
 auto sboxi = std::move(BuildSboxInverse());

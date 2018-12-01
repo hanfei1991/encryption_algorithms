@@ -30,8 +30,8 @@ add_executable(
         aes/matrix.h
         aes/sbox.cc
         aes/sbox.h
-        aes/other_impl.cc
-        aes/other_impl.h
+        aes/aes_ctr.cc
+        aes/aes_ctr.h
 aes/aes.cc
 aes/aes.h)
 

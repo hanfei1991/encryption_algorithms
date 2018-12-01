@@ -17,9 +17,6 @@ template <bool encrypt>
 void Aes128Transform(uint8_t *data, uint8_t *out, uint8_t *key) {
   auto w = (uint8_t *)malloc(4 * (10 + 1) * 4); // Nb * (Nr +1) * 4
   key_expansion(key, w);
-//    for(int i = 0 ;i < 176; ++i)
-//        printf("%#x ", w[i]);
-//    puts("[end]");
   if (encrypt) {
     cipher(data, out, w);
   } else {
@@ -37,32 +34,19 @@ private:
       i--;
     }
     if (i != -1)
-        nonce_[i]++;
-
+      nonce_[i]++;
   }
 
 public:
-  CTR(uint8_t *nonce, uint8_t *key) : nonce_(nonce), key_(key) {
-
-  }
+  CTR(uint8_t *nonce, uint8_t *key) : nonce_(nonce), key_(key) {}
 
   void Do(uint8_t *data, uint8_t *out) {
-// for(int j = 0; j < 16; ++j ) {
-//        printf("%#x ",  nonce_[j]);
-//    }
-//    puts("");
-//
-// puts("key:");
-//      for(int j = 0; j < 16; ++j ) {
-//          printf("%#x ",  key_[j]);
-//      }
-//      puts("");
     uint8_t buf[16];
     Aes128Transform<true>(nonce_, buf, key_);
-      for(int j = 0; j < 16; ++j ) {
-          printf("%#x ", buf[j]);
-      }
-      puts("");
+    for (int j = 0; j < 16; ++j) {
+      printf("%#x ", buf[j]);
+    }
+    puts("");
 
     for (int i = 0; i < 16; ++i) {
       out[i] = data[i] ^ buf[i];
